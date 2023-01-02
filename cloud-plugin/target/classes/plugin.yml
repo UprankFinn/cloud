@@ -1,0 +1,10 @@
+name: CloudSpigot
+author: Uprank - Finn K.
+version: 1.0-SNAPSHOT
+api-version: 1.19
+main: de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.CloudBukkitPlugin
+
+commands:
+  cloudserver:
+    permission: de.uprank.cloudproxy.command.cloudserver
+    description: A cloud Command
