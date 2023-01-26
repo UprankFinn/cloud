@@ -36,9 +36,9 @@ public class ProxyPingListener implements Listener {
 
         } else {
             serverPing.setDescriptionComponent(new TextComponent(this.plugin.getProxyConfig().getLine_1().replace("&", "§") +
-                    "\n" + this.plugin.getProxyConfig().getLine_2().get(new Random().nextInt(this.plugin.getProxyConfig().getLine_2().size())).replace("&", "§")));
+                    "\n" + this.plugin.getProxyConfig().getLine_2().get(new Random().nextInt(this.plugin.getProxyConfig().getLine_2().size())).replace("&", "§").replace("\"", "\"")));
 
-            serverPing.getPlayers().setOnline(this.plugin.getCloudCore().getOnlinePlayerCount());
+            serverPing.getPlayers().setOnline(this.plugin.getCloudCore().getOnlinePlayers().size());
             serverPing.getPlayers().setMax(this.plugin.getProxyConfig().getSlots());
 
         }

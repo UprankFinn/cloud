@@ -7,14 +7,12 @@ import de.uprank.cloud.packets.PacketType;
 import de.uprank.cloud.packets.type.server.GameServerRequestPacket;
 import de.uprank.cloudsystem.cloudapi.CloudAPI;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.CloudBukkitPlugin;
-import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.CloudProxiedPlugin;
 import lombok.Getter;
 import redis.clients.jedis.Jedis;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 public class CloudCore extends CloudAPI {
@@ -36,6 +34,10 @@ public class CloudCore extends CloudAPI {
     private String hostName;
     private Integer port;
     private String password;
+
+    private final Map<UUID, String> onlinePlayers;
+    private final List<String> onlineProxies;
+    private final List<String> onlineServers;
 
     private final Jedis jedis;
 
@@ -73,16 +75,15 @@ public class CloudCore extends CloudAPI {
         this.jedis.auth(this.password);
         this.jedis.connect();
 
+        this.onlinePlayers = new HashMap<>();
+        this.onlineProxies = new ArrayList<>();
+        this.onlineServers = new ArrayList<>();
+
     }
 
     @Override
-    public Integer getOnlinePlayerCount() {
-        return Integer.valueOf((int) this.jedis.llen("players"));
-    }
-
-    @Override
-    public List<UUID> getOnlineUniqueIds() {
-        return null;
+    public Map<UUID, String> getOnlinePlayers() {
+        return this.onlinePlayers;
     }
 
     @Override
@@ -108,10 +109,20 @@ public class CloudCore extends CloudAPI {
     @Override
     public void startNewService() {
         if (isProxy) {
-            CloudProxiedPlugin.getInstance().getChannel().writeAndFlush(new Packet(PacketType.GameServerRequestPacket.name(), new GameServerRequestPacket(this.servergroup, this.template, this.wrapper, this.minMemory, this.maxMemory, false, this.isFallBack, this.isDynamic)));
+            //CloudProxiedPlugin.getInstance().getChannel().writeAndFlush(new Packet(PacketType.GameServerRequestPacket.name(), new GameServerRequestPacket(this.servergroup, this.template, this.wrapper, this.minMemory, this.maxMemory, false, this.isFallBack, this.isDynamic)));
         } else {
             CloudBukkitPlugin.getInstance().getChannel().writeAndFlush(new Packet(PacketType.GameServerRequestPacket.name(), new GameServerRequestPacket(this.servergroup, this.template, this.wrapper, this.minMemory, this.maxMemory, false, this.isFallBack, this.isDynamic)));
         }
+    }
+
+    @Override
+    public List<String> getOnlineProxies() {
+        return null;
+    }
+
+    @Override
+    public List<String> getOnlineServers() {
+        return null;
     }
 
     @Override

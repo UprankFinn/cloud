@@ -1,6 +1,6 @@
 package de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.netty;
 
-import de.uprank.cloud.packets.NettyUtil;
+import de.uprank.cloud.packets.netty.NettyUtil;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.CloudProxiedPlugin;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;

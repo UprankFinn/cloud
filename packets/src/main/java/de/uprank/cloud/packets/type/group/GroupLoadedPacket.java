@@ -6,14 +6,17 @@ import java.util.List;
 public class GroupLoadedPacket implements Serializable {
 
     private final String name;
+    private final String wrapper;
+    private final String version;
 
     private final Boolean isFallBack;
     private final Boolean isProxy;
     private final List<String> templates;
 
-    public GroupLoadedPacket(String name, Boolean isFallBack, Boolean isProxy, List<String> templates) {
+    public GroupLoadedPacket(String name, String wrapper, String version, Boolean isFallBack, Boolean isProxy, List<String> templates) {
         this.name = name;
-
+        this.wrapper = wrapper;
+        this.version = version;
         this.isFallBack = isFallBack;
         this.isProxy = isProxy;
         this.templates = templates;
@@ -21,6 +24,14 @@ public class GroupLoadedPacket implements Serializable {
 
     public String getName() {
         return name;
+    }
+
+    public String getWrapper() {
+        return wrapper;
+    }
+
+    public String getVersion() {
+        return version;
     }
 
     public Boolean isFallBack(){

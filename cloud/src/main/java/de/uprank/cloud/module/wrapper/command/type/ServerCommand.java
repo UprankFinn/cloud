@@ -23,7 +23,7 @@ public class ServerCommand implements Command {
                 }
 
                 this.wrapperModule.info("&bThere are all registered servers in this wrapper:");
-                this.wrapperModule.getServerManager().getServers().forEach((servers) -> {
+                this.wrapperModule.getServerManager().getServers().forEach((name, servers) -> {
 
                     this.wrapperModule.info("  &8» &b" + servers.getName() + " &8- &bregistered as " + servers.getHostName() + ":" + servers.getPort() + " &8(&aGameID #" + servers.getGameId() + "&8)");
 
@@ -42,12 +42,12 @@ public class ServerCommand implements Command {
                     return;
                 }
 
-                if(this.wrapperModule.getServerManager().getServerByName(serverName) == null){
+                if(this.wrapperModule.getServerManager().getServer(serverName) == null){
                     this.wrapperModule.info("&c" + serverName + " is not started!");
                     return;
                 }
 
-                this.wrapperModule.getServerManager().getServerByName(serverName).shutdown();
+                this.wrapperModule.getServerManager().getServer(serverName).shutdown();
 
             }
 

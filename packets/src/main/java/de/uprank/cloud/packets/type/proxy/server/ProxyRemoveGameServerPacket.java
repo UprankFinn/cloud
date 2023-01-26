@@ -1,4 +1,4 @@
-package de.uprank.cloud.packets.type.proxy;
+package de.uprank.cloud.packets.type.proxy.server;
 
 import java.io.Serializable;
 

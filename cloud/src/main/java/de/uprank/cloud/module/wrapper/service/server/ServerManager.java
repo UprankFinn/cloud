@@ -4,7 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import de.uprank.cloud.module.wrapper.WrapperModule;
+import de.uprank.cloud.packets.Packet;
+import de.uprank.cloud.packets.PacketType;
 import de.uprank.cloud.packets.ServerUtil;
+import de.uprank.cloud.packets.type.server.GameServerStartPacket;
+import de.uprank.cloud.packets.type.server.GameServerStopPacket;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -24,14 +28,14 @@ public class ServerManager {
 
     private final WrapperModule wrapperModule;
 
-    private final List<Server> servers;
-    private final Map<String, Long> nameReservation;
+    private final Map<String, Server> servers;
+    private final Map<String, Process> processes;
 
     public ServerManager(WrapperModule wrapperModule) {
         this.wrapperModule = wrapperModule;
 
-        this.servers = new ArrayList<>();
-        this.nameReservation = new HashMap<>();
+        this.servers = new HashMap<>();
+        this.processes = new HashMap<>();
     }
 
     @SneakyThrows
@@ -68,42 +72,41 @@ public class ServerManager {
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        try (FileWriter fileWriter = new FileWriter("temporary/servers/" + group + "/" + serverName + "/service.json")){
+        try (FileWriter fileWriter = new FileWriter("temporary/servers/" + group + "/" + serverName + "/service.json")) {
             gson.toJson(jsonObject, fileWriter);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
         Server server = new Server(serverName, gameId, "127.0.0.1", getPort(), minMemory, maxMemory, this.wrapperModule.getName(), group, template, ServerUtil.START_UP, fallBack, true);
-        this.servers.add(server);
+        this.servers.put(serverName, server);
         server.start();
+
+        this.wrapperModule.getChannel().writeAndFlush(new Packet(PacketType.GameServerStartPacket.name(), new GameServerStartPacket(server.getName(), server.getGameId(), server.getHostName(), server.getPort(), server.getWrapper(), server.getGroup(), server.getTemplate(), minMemory, maxMemory, server.getServerUtil(), false, server.isFallBack(), server.isDynamic())));
+        this.wrapperModule.info("&bstarting new service on " + server.getHostName() + ":" + server.getPort() + "&8(&b" + server.getName() + "&8)");
 
     }
 
     public void stopService(String name) {
 
-        if (getServerByName(name) != null) {
-            getServerByName(name).shutdown();
+        if (getServer(name) != null) {
+            WrapperModule.getInstance().info("&cstopping Service with name " + name);
+            getServer(name).shutdown();
         }
 
     }
 
     public String findServerName(String group, String template) {
         int current = 1;
-        while (true) {
-            String name = group + "-" + template + "-" + current;
-            if (getServerByName(name) != null || nameReservation.containsKey(name.toLowerCase())) {
-                current++;
-            } else {
-                return name;
-            }
+        while (getServer(group + "-" + template + "-" + current) != null) {
+            current++;
         }
-
+        return group + "-" + template + "-" + current;
     }
 
-    public Server getServerByName(String name) {
-        for (Server servers : this.servers) {
-            if (servers.getName().contains(name)) return servers;
+    public Server getServer(String server) {
+        if (this.servers.containsKey(server)) {
+            return this.servers.get(server);
         }
         return null;
     }

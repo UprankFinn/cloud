@@ -4,6 +4,8 @@ import com.sun.management.OperatingSystemMXBean;
 import de.uprank.cloud.module.Module;
 import de.uprank.cloud.module.wrapper.command.type.*;
 import de.uprank.cloud.module.wrapper.command.CommandManager;
+import de.uprank.cloud.module.wrapper.group.proxy.ProxyGroupManager;
+import de.uprank.cloud.module.wrapper.group.server.ServiceGroupManager;
 import de.uprank.cloud.module.wrapper.netty.NettyServer;
 import de.uprank.cloud.module.wrapper.service.proxy.ProxyManager;
 import de.uprank.cloud.module.wrapper.service.server.ServerManager;
@@ -11,7 +13,6 @@ import de.uprank.cloud.packets.Packet;
 import de.uprank.cloud.packets.PacketType;
 import de.uprank.cloud.packets.type.wrapper.WrapperAlivePacket;
 import de.uprank.cloud.util.AnsiUtil;
-import de.uprank.cloud.util.VersionUtil;
 import io.netty.channel.Channel;
 import io.netty.util.ResourceLeakDetector;
 import lombok.Getter;
@@ -25,13 +26,8 @@ import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.TerminalBuilder;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -41,6 +37,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+@Getter
 public class WrapperModule extends Module {
 
     @Getter
@@ -59,6 +56,8 @@ public class WrapperModule extends Module {
     private Channel channel;
     private NettyServer nettyServer;
 
+    private final ProxyGroupManager proxyGroupManager;
+    private final ServiceGroupManager serviceGroupManager;
     private final ProxyManager proxyManager;
     private final ServerManager serverManager;
 
@@ -100,6 +99,8 @@ public class WrapperModule extends Module {
         this.logger.setUseParentHandlers(false);
         this.logger.addHandler(fileHandler);
 
+        this.proxyGroupManager = new ProxyGroupManager();
+        this.serviceGroupManager = new ServiceGroupManager();
         this.proxyManager = new ProxyManager(this);
         this.serverManager = new ServerManager(this);
     }
@@ -211,9 +212,36 @@ public class WrapperModule extends Module {
     public void onDisable() {
         this.running = false;
         this.waiting = false;
-        //this.getMongoClient().close();
 
-        this.serverManager.getServers().forEach((servers) -> servers.shutdown());
+        if (!(this.proxyManager.getProcesses().isEmpty())) {
+            this.proxyManager.getProcesses().forEach((s, process) -> {
+                try {
+                    process.destroyForcibly().waitFor();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                this.proxyManager.getProcesses().remove(s);
+            });
+        }
+
+        if (!(this.proxyManager.getProxies().isEmpty())) {
+            this.proxyManager.getProxies().forEach((name, proxies) -> proxies.shutdown());
+        }
+
+        if (!(this.serverManager.getProcesses().isEmpty())) {
+            this.serverManager.getProcesses().forEach((s, process) -> {
+                try {
+                    process.destroyForcibly().waitFor();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                this.serverManager.getProcesses().remove(s);
+            });
+        }
+
+        if (!(this.serverManager.getServers().isEmpty())) {
+            this.serverManager.getServers().forEach((name, servers) -> servers.shutdown());
+        }
 
     }
 
@@ -293,6 +321,10 @@ public class WrapperModule extends Module {
             }
 
         }
+    }
+
+    public ServiceGroupManager getServiceGroupManager() {
+        return serviceGroupManager;
     }
 
     public ProxyManager getProxyManager() {

@@ -1,5 +1,8 @@
 package de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.listener;
 
+import de.uprank.cloud.packets.Packet;
+import de.uprank.cloud.packets.PacketType;
+import de.uprank.cloud.packets.type.player.PlayerLogOutPacket;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.CloudProxiedPlugin;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
@@ -16,6 +19,8 @@ public class PlayerDisconnectListener implements Listener {
 
     @EventHandler
     public void onPlayerDisconnectEvent(PlayerDisconnectEvent event) {
+
+        this.plugin.getChannel().writeAndFlush(new Packet(PacketType.PlayerLogOutPacket.name(), new PlayerLogOutPacket(event.getPlayer().getUniqueId(), event.getPlayer().getName())));
 
         this.plugin.getCloudCore().getJedis().lrem("cloudPlayers", 1, event.getPlayer().getUniqueId().toString());
 

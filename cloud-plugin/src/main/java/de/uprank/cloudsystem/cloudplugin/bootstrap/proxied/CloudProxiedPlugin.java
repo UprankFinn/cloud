@@ -1,16 +1,22 @@
 package de.uprank.cloudsystem.cloudplugin.bootstrap.proxied;
 
-import de.uprank.cloud.packets.Packet;
 import de.uprank.cloudsystem.cloudplugin.CloudCore;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.commands.CloudCommand;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.config.ProxyConfig;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.listener.PlayerDisconnectListener;
+import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.listener.PostLoginListener;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.listener.ProxyPingListener;
-import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.listener.ServerConnectedListener;
+import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.listener.ServerConnectListener;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.netty.NettyServer;
 import io.netty.channel.Channel;
 import lombok.Getter;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 public final class CloudProxiedPlugin extends Plugin {
@@ -24,11 +30,21 @@ public final class CloudProxiedPlugin extends Plugin {
     private Channel channel;
     private NettyServer nettyServer;
 
+    private final List<String> proxies;
+    private final Map<String, ServerInfo> lobbies;
+    private final Map<String, ServerInfo> premiums;
+    private final Map<String, ServerInfo> silent;
+
     public CloudProxiedPlugin() {
         instance = this;
         this.cloudCore = new CloudCore("service.json");
         this.proxyConfig = new ProxyConfig(this);
         this.proxyConfig.readConfig();
+
+        this.proxies = new ArrayList<>();
+        this.lobbies = new HashMap<>();
+        this.premiums =  new HashMap<>();
+        this.silent = new HashMap<>();
     }
 
     @Override
@@ -41,8 +57,9 @@ public final class CloudProxiedPlugin extends Plugin {
         new CloudCommand(this);
 
         new PlayerDisconnectListener(this);
+        new PostLoginListener(this);
         new ProxyPingListener(this);
-        new ServerConnectedListener(this);
+        new ServerConnectListener(this);
 
     }
 

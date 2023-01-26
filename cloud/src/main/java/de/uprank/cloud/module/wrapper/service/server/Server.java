@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
@@ -69,9 +70,8 @@ public class Server {
 
     public void start() {
 
-        Executors.newSingleThreadExecutor().execute(() -> {
-
-            File file = new File("temporary/servers/" + this.group + "/" + this.name + "/");
+        new Thread(() -> {
+            File file = new File("temporary/servers/" + this.group.toLowerCase(Locale.ROOT) + "/" + this.name.toLowerCase(Locale.ROOT) + "/");
 
             try {
 
@@ -79,38 +79,29 @@ public class Server {
                 processBuilder.directory(file);
                 processBuilder.command("java", "-Xms" + this.minMemory + "M", "-Xms" + this.maxMemory + "M", "-jar", "paper.jar", "--online-mode", "false", "--host", this.hostName, "--port", this.port.toString());
                 this.process = processBuilder.start();
-
                 this.processId = Integer.valueOf((int) this.process.pid());
 
-                WrapperModule.getInstance().getChannel().writeAndFlush(new Packet(PacketType.GameServerStartPacket.name(), new GameServerStartPacket(this.name, this.gameId, this.hostName, this.port, this.wrapper, this.group, this.template, minMemory, maxMemory, this.serverUtil, false, this.isFallBack, this.isDynamic)));
-                WrapperModule.getInstance().info("&bstarting new service on " + this.hostName + ":" + this.port + "&8(&b" + this.name + "&8)");
+                WrapperModule.getInstance().getServerManager().getProcesses().put(this.name, process);
 
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
 
-        });
+        }).start();
 
     }
 
     public void shutdown() {
-        this.process.destroy();
         try {
-            Runtime.getRuntime().exec("kill " + this.processId);
-        } catch (IOException e) {
+            WrapperModule.getInstance().getServerManager().getProcesses().remove(this.name);
+            WrapperModule.getInstance().info("&cstopping Service with name " + this.name);
+            Process killserverProcess = Runtime.getRuntime().exec("kill -9" + this.processId);
+            killserverProcess.waitFor();
+            Process deleteFileProcess = Runtime.getRuntime().exec(new String[] { "bash", "-c", "rm -r " + new File("temporary/servers/" + this.group.toLowerCase(Locale.ROOT) + "/" + this.name.toLowerCase(Locale.ROOT) + "/").getAbsoluteFile()});
+            deleteFileProcess.waitFor();
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-
-        WrapperModule.getInstance().getChannel().writeAndFlush(new Packet(PacketType.GameServerStopPacket.name(), new GameServerStopPacket(name, hostName, port, wrapper)));
-        WrapperModule.getInstance().info("&cstopping Service with name " + this.name);
-
-        if (!(this.process.isAlive())) {
-            File file = new File("temporary/servers/" + this.group + "/" + this.name + "/");
-            if (file.exists()) {
-                file.delete();
-            }
-        }
-
     }
 
     public void sendPacket(Packet packet) {

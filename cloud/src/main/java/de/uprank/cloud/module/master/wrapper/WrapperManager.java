@@ -73,9 +73,9 @@ public class WrapperManager {
                 }
             }
 
-            Wrapper wrapper = new Wrapper(wrapperStartPacket.getName(), wrapperStartPacket.getHostName(), wrapperStartPacket.getMaxMemory());
+            Wrapper wrapper = new Wrapper(wrapperStartPacket.getName(), channel, wrapperStartPacket.getHostName(), wrapperStartPacket.getMaxMemory());
             wrapper.setChannel(channel);
-            wrapper.setTimeout(System.currentTimeMillis() + 20000);
+            wrapper.setTimeout(System.currentTimeMillis() + 200);
             this.wrapperList.add(wrapper);
 
             this.masterModule.info("&eregistered new Channel: " + wrapper.getName() + ":" + wrapper.getHostName());

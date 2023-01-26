@@ -87,7 +87,7 @@ public class MasterModule extends Module {
         this.logger.addHandler(fileHandler);
 
         this.wrapperManager = new WrapperManager(this);
-        this.proxyManager = new ProxyManager();
+        this.proxyManager = new ProxyManager(this);
         this.serverManager = new ServerManager(this);
     }
 
@@ -105,7 +105,8 @@ public class MasterModule extends Module {
         this.commandManager.registerCommand("stop", new StopCommand(this));
         this.commandManager.registerCommand("wrappers", new WrappersCommand(this));
 
-        if (!(new File("groups/").exists())) new File("groups/").mkdirs();
+        if (!(new File("groups/proxies/").exists())) new File("groups/proxies/").mkdirs();
+        if (!(new File("groups/servers/").exists())) new File("groups/servers/").mkdirs();
 
         this.info("&b   _____ _                 _ __  __           _            ");
         this.info("&b  / ____| |               | |  \\/  |         | |           ");

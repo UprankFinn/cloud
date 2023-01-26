@@ -1,6 +1,6 @@
 package de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.netty;
 
-import de.uprank.cloud.packets.NettyUtil;
+import de.uprank.cloud.packets.netty.NettyUtil;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.CloudBukkitPlugin;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -58,6 +58,8 @@ public class NettyServer implements Runnable {
 
                 System.out.println("No connection to CloudSystem! Reconnect in 2 Seconds!");
                 Thread.sleep(2000);
+
+                this.plugin.startNetty();
 
                 eventLoopGroup.shutdownGracefully();
             });

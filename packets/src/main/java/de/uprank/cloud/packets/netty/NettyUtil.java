@@ -1,4 +1,4 @@
-package de.uprank.cloud.packets;
+package de.uprank.cloud.packets.netty;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;

@@ -18,8 +18,9 @@ public class Wrapper {
     private double cpuUsage;
     private double averageCpu;
 
-    public Wrapper(String name, String hostName, Integer maxMemory) {
+    public Wrapper(String name, Channel channel, String hostName, Integer maxMemory) {
         this.name = name;
+        this.channel = channel;
 
         this.hostName = hostName;
         this.maxMemory = maxMemory;
@@ -79,6 +80,10 @@ public class Wrapper {
 
     public double getCpuUsage() {
         return cpuUsage;
+    }
+
+    public Channel getChannel() {
+        return channel;
     }
 
     public double getAverageCpu() {

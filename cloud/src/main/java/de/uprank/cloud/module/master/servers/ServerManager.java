@@ -4,22 +4,24 @@ import de.uprank.cloud.module.master.MasterModule;
 import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 public class ServerManager {
 
     private final MasterModule masterModule;
 
-    private final List<String> servers = new ArrayList<>();
+    private final Map<String, Server> servers = new HashMap<>();
 
     public ServerManager(MasterModule masterModule) {
         this.masterModule = masterModule;
     }
 
-    public String getServer(String name) {
-        for (String server : this.servers) {
-            if (server.equals(name)) {
+    public Server getServer(String name) {
+        for (Server server : this.servers.values()) {
+            if (server.getName().equals(name)) {
                 return server;
             }
         }

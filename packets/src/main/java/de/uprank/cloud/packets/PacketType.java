@@ -16,18 +16,37 @@ public enum PacketType {
     TemplateCreatePacket,
     TemplateDeletePacket,
 
-    GameServerRequestPacket,
-    GameServerRequestStopPacket,
+    //========= PROXY ============
+
+    ProxyRequestPacket,
+
+    ProxyRegisteredPacket,
+    ProxyUnRegisteredPacket,
+
+    ProxySyncServersPacket,
 
     ProxyAddGameServerPacket,
     ProxyRemoveGameServerPacket,
 
     ProxyServerStartPacket,
+    ProxyServerAlivePacket,
     ProxyServerStopPacket,
+
+    //========= Server ============
+
+    GameServerRequestPacket,
+    GameServerRequestStopPacket,
 
     GameServerStartPacket,
     GameServerAlivePacket,
     GameServerStopPacket,
+
+    GameServerSignPacket,
+
+    //========= Player ============
+
+    PlayerLoginPacket,
+    PlayerLogOutPacket,
 
     ;
 
