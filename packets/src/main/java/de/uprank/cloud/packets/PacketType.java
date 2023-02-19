@@ -18,7 +18,7 @@ public enum PacketType {
 
     //========= PROXY ============
 
-    ProxyRequestPacket,
+    ProxyServerRequestPacket,
 
     ProxyRegisteredPacket,
     ProxyUnRegisteredPacket,
@@ -32,6 +32,10 @@ public enum PacketType {
     ProxyServerAlivePacket,
     ProxyServerStopPacket,
 
+    ProxyServerUpdatePacket,
+
+    ProxyToggleMaintenancePacket,
+
     //========= Server ============
 
     GameServerRequestPacket,
@@ -41,12 +45,26 @@ public enum PacketType {
     GameServerAlivePacket,
     GameServerStopPacket,
 
+    GameServerUpdatePacket,
+
     GameServerSignPacket,
+    GameServerSignRequestPacket,
+
+    //========= SYNC ==============
+
+    ProxySyncPacket,
+    GetProxySyncPacket,
 
     //========= Player ============
 
     PlayerLoginPacket,
     PlayerLogOutPacket,
+
+    PlayerMessagePacket,
+
+    PlayerSwitchServerPacket,
+
+    GetCloudPlayerPacket,
 
     ;
 

@@ -4,12 +4,16 @@ import de.uprank.cloud.module.wrapper.WrapperModule;
 import de.uprank.cloud.packets.Packet;
 import de.uprank.cloud.packets.PacketType;
 import de.uprank.cloud.packets.ServerUtil;
+import de.uprank.cloud.packets.type.proxy.ProxyServerStopPacket;
 import de.uprank.cloud.packets.type.server.GameServerStartPacket;
 import de.uprank.cloud.packets.type.server.GameServerStopPacket;
+import de.uprank.cloud.packets.util.StopReason;
 import io.netty.channel.Channel;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -71,10 +75,9 @@ public class Server {
     public void start() {
 
         new Thread(() -> {
-            File file = new File("temporary/servers/" + this.group.toLowerCase(Locale.ROOT) + "/" + this.name.toLowerCase(Locale.ROOT) + "/");
+            File file = new File("temporary/servers/" + this.group + "/" + this.name + "/");
 
             try {
-
                 ProcessBuilder processBuilder = new ProcessBuilder(new String[0]);
                 processBuilder.directory(file);
                 processBuilder.command("java", "-Xms" + this.minMemory + "M", "-Xms" + this.maxMemory + "M", "-jar", "paper.jar", "--online-mode", "false", "--host", this.hostName, "--port", this.port.toString());
@@ -92,16 +95,24 @@ public class Server {
     }
 
     public void shutdown() {
-        try {
-            WrapperModule.getInstance().getServerManager().getProcesses().remove(this.name);
-            WrapperModule.getInstance().info("&cstopping Service with name " + this.name);
-            Process killserverProcess = Runtime.getRuntime().exec("kill -9" + this.processId);
-            killserverProcess.waitFor();
-            Process deleteFileProcess = Runtime.getRuntime().exec(new String[] { "bash", "-c", "rm -r " + new File("temporary/servers/" + this.group.toLowerCase(Locale.ROOT) + "/" + this.name.toLowerCase(Locale.ROOT) + "/").getAbsoluteFile()});
-            deleteFileProcess.waitFor();
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        new Thread(() -> {
+            try {
+                WrapperModule.getInstance().info("&cstopping Service with name " + this.name);
+
+                WrapperModule.getInstance().getServerChannel().writeAndFlush(new Packet(PacketType.GameServerStopPacket.name(), new GameServerStopPacket(this.name, StopReason.Normal_STOP, group, template,
+                        wrapper, hostName, port,minMemory,maxMemory,false,isFallBack,isDynamic)));
+
+                Process killserverProcess = Runtime.getRuntime().exec("kill -9" + this.processId);
+                killserverProcess.waitFor();
+
+                Files.delete(Paths.get("temporary/servers/" + this.group + "/" + this.name + "/"));
+
+                WrapperModule.getInstance().getServerManager().getProcesses().get(this.name).destroyForcibly();
+                WrapperModule.getInstance().getServerManager().getProcesses().remove(this.name);
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
     }
 
     public void sendPacket(Packet packet) {

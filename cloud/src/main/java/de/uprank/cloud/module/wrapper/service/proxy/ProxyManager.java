@@ -90,12 +90,11 @@ public class ProxyManager {
         this.proxies.put(serverName, proxy);
         proxy.start();
 
-        this.wrapperModule.getChannel().writeAndFlush(new Packet(PacketType.ProxyServerStartPacket.name(), new ProxyServerStartPacket(proxy.getName(), proxy.getHostName(), proxy.getPort(), proxy.getWrapper(), proxy.getGroup(), proxy.getTemplate(), minMemory, maxMemory, proxy.getServerUtil(), false, proxy.isDynamic())));
+        this.wrapperModule.getProxyChannel().writeAndFlush(new Packet(PacketType.ProxyServerStartPacket.name(), new ProxyServerStartPacket(proxy.getName(), proxy.getHostName(), proxy.getPort(), proxy.getWrapper(), proxy.getGroup(), proxy.getTemplate(), minMemory, maxMemory, proxy.getServerUtil(), false, proxy.isDynamic())));
         this.wrapperModule.info("&bstarting new proxy on " + proxy.getHostName() + ":" + proxy.getPort() + "&8(&b" + proxy.getName() + "&8)");
 
 
     }
-
     public String findProxyName(String group, String template) {
         int current = 1;
         while (getProxyByName(group + "-" + template + "-" + current) != null) {

@@ -1,20 +1,21 @@
 package de.uprank.cloud.module.wrapper.service.proxy;
 
-import de.uprank.cloud.CloudSystem;
 import de.uprank.cloud.module.wrapper.WrapperModule;
 import de.uprank.cloud.packets.Packet;
+import de.uprank.cloud.packets.PacketType;
 import de.uprank.cloud.packets.ServerUtil;
+import de.uprank.cloud.packets.type.proxy.ProxyServerStopPacket;
+import de.uprank.cloud.packets.util.StopReason;
 import io.netty.channel.Channel;
 import lombok.SneakyThrows;
-import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class Proxy {
 
@@ -67,7 +68,7 @@ public class Proxy {
     public void start() {
 
         new Thread(() -> {
-            File file = new File("temporary/proxies/" + this.group.toLowerCase(Locale.ROOT) + "/" + this.name.toLowerCase(Locale.ROOT) + "/");
+            File file = new File("temporary/proxies/" + this.group + "/" + this.name + "/");
 
             if (!(file.exists())) file.mkdirs();
 
@@ -92,16 +93,23 @@ public class Proxy {
     }
 
     public void shutdown() {
-        try {
-            WrapperModule.getInstance().getProxyManager().getProcesses().remove(this.name);
-            WrapperModule.getInstance().info("&cstopping Proxy with name " + this.name);
-            Process killserverProcess = Runtime.getRuntime().exec("kill -9" + this.processId);
-            killserverProcess.waitFor();
-            Process deleteFileProcess = Runtime.getRuntime().exec(new String[]{"bash", "-c", "rm -r " + new File("temporary/proxies/" + this.group.toLowerCase(Locale.ROOT) + "/" + this.name.toLowerCase(Locale.ROOT) + "/").getAbsoluteFile()});
-            deleteFileProcess.waitFor();
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        new Thread(() -> {
+            try {
+                WrapperModule.getInstance().info("&cstopping Proxy with name " + this.name);
+
+                WrapperModule.getInstance().getProxyChannel().writeAndFlush(new Packet(PacketType.ProxyServerStopPacket.name(), new ProxyServerStopPacket(this.name, StopReason.Normal_STOP, this.hostName, this.port, group, template, this.wrapper, minMemory, maxMemory, isDynamic)));
+
+                WrapperModule.getInstance().getProxyManager().getProcesses().get(this.name).destroyForcibly();
+                WrapperModule.getInstance().getProxyManager().getProcesses().remove(this.name);
+                Process killserverProcess = Runtime.getRuntime().exec("kill -9" + this.processId);
+                killserverProcess.waitFor();
+
+                Files.delete(Paths.get("temporary/proxies/" + this.group + "/" + this.name + "/"));
+
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
     }
 
     public void sendPacket(Packet packet) {

@@ -79,20 +79,12 @@ public class ServerManager {
         }
 
         Server server = new Server(serverName, gameId, "127.0.0.1", getPort(), minMemory, maxMemory, this.wrapperModule.getName(), group, template, ServerUtil.START_UP, fallBack, true);
+        server.setChannel(this.wrapperModule.getServerChannel());
         this.servers.put(serverName, server);
         server.start();
 
-        this.wrapperModule.getChannel().writeAndFlush(new Packet(PacketType.GameServerStartPacket.name(), new GameServerStartPacket(server.getName(), server.getGameId(), server.getHostName(), server.getPort(), server.getWrapper(), server.getGroup(), server.getTemplate(), minMemory, maxMemory, server.getServerUtil(), false, server.isFallBack(), server.isDynamic())));
+        this.wrapperModule.getServerChannel().writeAndFlush(new Packet(PacketType.GameServerStartPacket.name(), new GameServerStartPacket(server.getName(), server.getGameId(), server.getHostName(), server.getPort(), server.getWrapper(), server.getGroup(), server.getTemplate(), minMemory, maxMemory, server.getServerUtil(), false, server.isFallBack(), server.isDynamic())));
         this.wrapperModule.info("&bstarting new service on " + server.getHostName() + ":" + server.getPort() + "&8(&b" + server.getName() + "&8)");
-
-    }
-
-    public void stopService(String name) {
-
-        if (getServer(name) != null) {
-            WrapperModule.getInstance().info("&cstopping Service with name " + name);
-            getServer(name).shutdown();
-        }
 
     }
 

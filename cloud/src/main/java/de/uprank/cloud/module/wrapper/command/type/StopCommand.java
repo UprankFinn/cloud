@@ -17,8 +17,8 @@ public class StopCommand implements Command {
     @Override
     public void execute(String command, String[] args) {
         this.wrapperModule.info("Stop the Java process");
-        if (this.wrapperModule.getChannel() != null && this.wrapperModule.getChannel().isActive() && this.wrapperModule.getChannel().isOpen()) {
-            this.wrapperModule.getChannel().writeAndFlush(new Packet(PacketType.WrapperStopPacket.name(), new WrapperStopPacket(this.wrapperModule.getName(), this.wrapperModule.getHostName())));
+        if (this.wrapperModule.getWrapperChannel() != null && this.wrapperModule.getWrapperChannel().isActive() && this.wrapperModule.getWrapperChannel().isOpen()) {
+            this.wrapperModule.getWrapperChannel().writeAndFlush(new Packet(PacketType.WrapperStopPacket.name(), new WrapperStopPacket(this.wrapperModule.getName(), this.wrapperModule.getHostName())));
 
         }
         System.exit(0);

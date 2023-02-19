@@ -46,7 +46,7 @@ public class WrapperManager {
             Wrapper wrapper = wrapperIterator.next();
             if (wrapper.getName().equalsIgnoreCase(name)) {
                 this.wrapperList.remove(name);
-                this.masterModule.info("&eunregistered new Channel: " + wrapper.getName() + ":" + wrapper.getHostName());
+                this.masterModule.info("&7Wrapper &b&l" + wrapper.getName() + " &7is now unregistered");
             }
         }
     }
@@ -68,7 +68,7 @@ public class WrapperManager {
             while (wrapperIterator.hasNext()) {
                 Wrapper wrapper = wrapperIterator.next();
                 if (wrapper.getName().equalsIgnoreCase(wrapperStartPacket.getName())) {
-                    this.masterModule.warning("&cWrapper " + wrapperStartPacket.getName() + " is already registered");
+                    this.masterModule.warning("&cWrapper &b&l" + wrapperStartPacket.getName() + " &cis already registered");
                     return;
                 }
             }
@@ -78,7 +78,7 @@ public class WrapperManager {
             wrapper.setTimeout(System.currentTimeMillis() + 200);
             this.wrapperList.add(wrapper);
 
-            this.masterModule.info("&eregistered new Channel: " + wrapper.getName() + ":" + wrapper.getHostName());
+            this.masterModule.info("&7Wrapper &b&l" + wrapper.getName() + " &7is now registered and ready to use!");
         }).start();
     }
 }

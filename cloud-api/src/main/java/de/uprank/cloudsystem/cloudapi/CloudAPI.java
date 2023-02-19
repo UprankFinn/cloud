@@ -1,5 +1,8 @@
 package de.uprank.cloudsystem.cloudapi;
 
+import de.uprank.cloudsystem.cloudapi.player.PlayerManager;
+import de.uprank.cloudsystem.cloudapi.proxy.ProxyServerManager;
+import de.uprank.cloudsystem.cloudapi.server.GameServerManager;
 import redis.clients.jedis.Jedis;
 
 import java.util.List;
@@ -27,9 +30,10 @@ public abstract class CloudAPI {
 
     public abstract void startNewService();
 
-    public abstract List<String> getOnlineProxies();
-    public abstract List<String> getOnlineServers();
-
     public abstract Jedis getJedis();
+
+    public abstract PlayerManager getPlayerManager();
+    public abstract ProxyServerManager getProxyServerManager();
+    public abstract GameServerManager getGameServerManager();
 
 }

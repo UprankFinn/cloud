@@ -28,15 +28,17 @@ public class ProxyPingListener implements Listener {
             serverPing.setDescriptionComponent(
                     new TextComponent(
                             this.plugin.getProxyConfig().getMaintenanceLine_1() + "\n" +
-                                    this.plugin.getProxyConfig().getMaintenance_Lines_2().get(new Random().nextInt(this.plugin.getProxyConfig().getMaintenance_Lines_2().size()))));
+                                    this.plugin.getProxyConfig().getMaintenance_Lines_2().get(new Random().nextInt(this.plugin.getProxyConfig().getMaintenance_Lines_2().size())).replace("&", "§").replace("\"", "\"")
+                            .replace("\"", "")));
 
             serverPing.getVersion().setName(":D");
-            serverPing.getPlayers().setOnline(0);
-            serverPing.getPlayers().setMax(0);
+            serverPing.getPlayers().setOnline(this.plugin.getCloudCore().getOnlinePlayers().size());
+            serverPing.getPlayers().setMax(this.plugin.getProxyConfig().getSlots());
 
         } else {
             serverPing.setDescriptionComponent(new TextComponent(this.plugin.getProxyConfig().getLine_1().replace("&", "§") +
-                    "\n" + this.plugin.getProxyConfig().getLine_2().get(new Random().nextInt(this.plugin.getProxyConfig().getLine_2().size())).replace("&", "§").replace("\"", "\"")));
+                    "\n" + this.plugin.getProxyConfig().getLine_2().get(new Random().nextInt(this.plugin.getProxyConfig().getLine_2().size())).replace("&", "§").replace("\"", "\"")
+                    .replace("\"", "")));
 
             serverPing.getPlayers().setOnline(this.plugin.getCloudCore().getOnlinePlayers().size());
             serverPing.getPlayers().setMax(this.plugin.getProxyConfig().getSlots());

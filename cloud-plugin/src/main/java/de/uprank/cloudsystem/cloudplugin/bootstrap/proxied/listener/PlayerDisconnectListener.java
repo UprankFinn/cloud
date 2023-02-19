@@ -20,7 +20,7 @@ public class PlayerDisconnectListener implements Listener {
     @EventHandler
     public void onPlayerDisconnectEvent(PlayerDisconnectEvent event) {
 
-        this.plugin.getChannel().writeAndFlush(new Packet(PacketType.PlayerLogOutPacket.name(), new PlayerLogOutPacket(event.getPlayer().getUniqueId(), event.getPlayer().getName())));
+        this.plugin.getPlayerChannel().writeAndFlush(new Packet(PacketType.PlayerLogOutPacket.name(), new PlayerLogOutPacket(event.getPlayer().getUniqueId(), event.getPlayer().getName())));
 
         this.plugin.getCloudCore().getJedis().lrem("cloudPlayers", 1, event.getPlayer().getUniqueId().toString());
 

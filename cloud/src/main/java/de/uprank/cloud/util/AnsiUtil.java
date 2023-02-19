@@ -21,7 +21,7 @@ public enum AnsiUtil {
     YELLOW("&e", Ansi.ansi().a(Ansi.Attribute.RESET).fg(Ansi.Color.YELLOW).bold().toString()),
     WHITE("&f", Ansi.ansi().a(Ansi.Attribute.RESET).fg(Ansi.Color.WHITE).bold().toString()),
     OBFUSCATED("&k", Ansi.ansi().a(Ansi.Attribute.BLINK_SLOW).toString()),
-    BOLD("&l", Ansi.ansi().a(Ansi.Attribute.UNDERLINE_DOUBLE).toString()),
+    BOLD("&l", Ansi.ansi().a(Ansi.Attribute.INTENSITY_BOLD).bold().toString()),
     STRIKETHROUGH("&m", Ansi.ansi().a(Ansi.Attribute.STRIKETHROUGH_ON).toString()),
     UNDERLINE("&n", Ansi.ansi().a(Ansi.Attribute.UNDERLINE).toString()),
     ITALIC("&o", Ansi.ansi().a(Ansi.Attribute.ITALIC).toString()),

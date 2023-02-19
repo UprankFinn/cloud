@@ -6,7 +6,10 @@ import de.uprank.cloud.module.wrapper.command.type.*;
 import de.uprank.cloud.module.wrapper.command.CommandManager;
 import de.uprank.cloud.module.wrapper.group.proxy.ProxyGroupManager;
 import de.uprank.cloud.module.wrapper.group.server.ServiceGroupManager;
-import de.uprank.cloud.module.wrapper.netty.NettyServer;
+import de.uprank.cloud.module.wrapper.netty.player.PlayerHandlerClient;
+import de.uprank.cloud.module.wrapper.netty.proxy.ProxyHandlerClient;
+import de.uprank.cloud.module.wrapper.netty.server.ServerHandlerClient;
+import de.uprank.cloud.module.wrapper.netty.wrapper.WrapperHandlerClient;
 import de.uprank.cloud.module.wrapper.service.proxy.ProxyManager;
 import de.uprank.cloud.module.wrapper.service.server.ServerManager;
 import de.uprank.cloud.packets.Packet;
@@ -53,8 +56,15 @@ public class WrapperModule extends Module {
 
     private final CommandManager commandManager;
 
-    private Channel channel;
-    private NettyServer nettyServer;
+    private Channel playerChannel;
+    private Channel proxyChannel;
+    private Channel serverChannel;
+    private Channel wrapperChannel;
+
+    private PlayerHandlerClient playerHandlerClient;
+    private ProxyHandlerClient proxyHandlerClient;
+    private ServerHandlerClient serverHandlerClient;
+    private WrapperHandlerClient wrapperHandlerClient;
 
     private final ProxyGroupManager proxyGroupManager;
     private final ServiceGroupManager serviceGroupManager;
@@ -167,7 +177,7 @@ public class WrapperModule extends Module {
             @Override
             public void run() {
                 new Thread(() -> {
-                    if (channel != null && channel.isOpen() && channel.isActive()) {
+                    if (wrapperChannel != null && wrapperChannel.isOpen() && wrapperChannel.isActive()) {
                         double cpuUsage = ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getSystemCpuLoad() * 100;
                         cpuAverage.put(System.currentTimeMillis(), cpuUsage);
                         Integer usedMemory = 0;
@@ -195,15 +205,23 @@ public class WrapperModule extends Module {
                             cpuAverageCalculate.add(cpuAverage.get(time));
                         }
                         double cpuAverageUsage = calculateAverage(cpuAverageCalculate);
-                        channel.writeAndFlush(new Packet(PacketType.WrapperAlivePacket.name(), new WrapperAlivePacket(name, hostName, usedMemory, freeMemory, maxMemory, cpuUsage, cpuAverageUsage)));
+                        wrapperChannel.writeAndFlush(new Packet(PacketType.WrapperAlivePacket.name(), new WrapperAlivePacket(name, hostName, usedMemory, freeMemory, maxMemory, cpuUsage, cpuAverageUsage)));
                     }
                 }).start();
             }
         }, 20L, 20L)).start();
 
         if (this.name != null && hostName != null && maxMemory != -1) {
-            this.nettyServer = new NettyServer(this);
-            new Thread(this.nettyServer).start();
+            this.playerHandlerClient = new PlayerHandlerClient(this, "127.0.0.1", 2300);
+            this.proxyHandlerClient = new ProxyHandlerClient(this, "127.0.0.1", 2301);
+            this.serverHandlerClient = new ServerHandlerClient(this, "127.0.0.1", 2302);
+            this.wrapperHandlerClient = new WrapperHandlerClient(this, "127.0.0.1", 2303);
+
+            new Thread(this.playerHandlerClient).start();
+            new Thread(this.proxyHandlerClient).start();
+            new Thread(this.serverHandlerClient).start();
+            new Thread(this.wrapperHandlerClient).start();
+
         }
 
     }
@@ -213,30 +231,8 @@ public class WrapperModule extends Module {
         this.running = false;
         this.waiting = false;
 
-        if (!(this.proxyManager.getProcesses().isEmpty())) {
-            this.proxyManager.getProcesses().forEach((s, process) -> {
-                try {
-                    process.destroyForcibly().waitFor();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                this.proxyManager.getProcesses().remove(s);
-            });
-        }
-
         if (!(this.proxyManager.getProxies().isEmpty())) {
             this.proxyManager.getProxies().forEach((name, proxies) -> proxies.shutdown());
-        }
-
-        if (!(this.serverManager.getProcesses().isEmpty())) {
-            this.serverManager.getProcesses().forEach((s, process) -> {
-                try {
-                    process.destroyForcibly().waitFor();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                this.serverManager.getProcesses().remove(s);
-            });
         }
 
         if (!(this.serverManager.getServers().isEmpty())) {
@@ -362,16 +358,36 @@ public class WrapperModule extends Module {
         return commandManager;
     }
 
-    public Channel getChannel() {
-        return channel;
+    public Channel getPlayerChannel() {
+        return playerChannel;
     }
 
-    public void setChannel(Channel channel) {
-        this.channel = channel;
+    public void setPlayerChannel(Channel playerChannel) {
+        this.playerChannel = playerChannel;
     }
 
-    public NettyServer getNettyServer() {
-        return nettyServer;
+    public Channel getProxyChannel() {
+        return proxyChannel;
+    }
+
+    public void setProxyChannel(Channel proxyChannel) {
+        this.proxyChannel = proxyChannel;
+    }
+
+    public Channel getServerChannel() {
+        return serverChannel;
+    }
+
+    public void setServerChannel(Channel serverChannel) {
+        this.serverChannel = serverChannel;
+    }
+
+    public Channel getWrapperChannel() {
+        return wrapperChannel;
+    }
+
+    public void setWrapperChannel(Channel wrapperChannel) {
+        this.wrapperChannel = wrapperChannel;
     }
 
     @Override

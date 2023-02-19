@@ -4,9 +4,19 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.uprank.cloud.packets.Packet;
 import de.uprank.cloud.packets.PacketType;
+import de.uprank.cloud.packets.type.proxy.ProxyServerRequestPacket;
 import de.uprank.cloud.packets.type.server.GameServerRequestPacket;
 import de.uprank.cloudsystem.cloudapi.CloudAPI;
+import de.uprank.cloudsystem.cloudapi.player.PlayerManager;
+import de.uprank.cloudsystem.cloudapi.proxy.ProxyServerManager;
+import de.uprank.cloudsystem.cloudapi.server.GameServer;
+import de.uprank.cloudsystem.cloudapi.server.GameServerManager;
+import de.uprank.cloudsystem.cloudplugin.api.gameserver.AbstractGameServerManager;
+import de.uprank.cloudsystem.cloudplugin.api.player.AbstractPlayerManager;
+import de.uprank.cloudsystem.cloudplugin.api.proxyserver.AbstractProxyServerManager;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.CloudBukkitPlugin;
+import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.CloudProxiedPlugin;
+import io.netty.channel.Channel;
 import lombok.Getter;
 import redis.clients.jedis.Jedis;
 
@@ -16,6 +26,11 @@ import java.util.*;
 
 @Getter
 public class CloudCore extends CloudAPI {
+
+    private static CloudCore plugin;
+
+    private Channel gameServerChannel;
+    private Channel proxyServerChannel;
 
     private String name;
     private String gameId;
@@ -36,12 +51,16 @@ public class CloudCore extends CloudAPI {
     private String password;
 
     private final Map<UUID, String> onlinePlayers;
-    private final List<String> onlineProxies;
-    private final List<String> onlineServers;
 
     private final Jedis jedis;
 
+    private final AbstractPlayerManager abstractPlayerManager;
+    private final AbstractGameServerManager abstractGameServerManager;
+    private final AbstractProxyServerManager abstractProxyServerManager;
+
     public CloudCore(String file) {
+
+        plugin = this;
 
         JsonParser jsonParser = new JsonParser();
         try {
@@ -75,10 +94,24 @@ public class CloudCore extends CloudAPI {
         this.jedis.auth(this.password);
         this.jedis.connect();
 
-        this.onlinePlayers = new HashMap<>();
-        this.onlineProxies = new ArrayList<>();
-        this.onlineServers = new ArrayList<>();
+        if (this.isProxy) {
+            this.setGameServerChannel(CloudProxiedPlugin.getInstance().getServerChannel());
+            this.setProxyServerChannel(CloudProxiedPlugin.getInstance().getProxyChannel());
+        } else {
+            this.setGameServerChannel(CloudBukkitPlugin.getInstance().getServerChannel());
+            this.setProxyServerChannel(CloudBukkitPlugin.getInstance().getProxyChannel());
+        }
 
+        this.onlinePlayers = new HashMap<>();
+
+        this.abstractPlayerManager = new AbstractPlayerManager();
+        this.abstractGameServerManager = new AbstractGameServerManager();
+        this.abstractProxyServerManager = new AbstractProxyServerManager();
+
+    }
+
+    public static CloudCore getPlugin() {
+        return plugin;
     }
 
     @Override
@@ -109,24 +142,45 @@ public class CloudCore extends CloudAPI {
     @Override
     public void startNewService() {
         if (isProxy) {
-            //CloudProxiedPlugin.getInstance().getChannel().writeAndFlush(new Packet(PacketType.GameServerRequestPacket.name(), new GameServerRequestPacket(this.servergroup, this.template, this.wrapper, this.minMemory, this.maxMemory, false, this.isFallBack, this.isDynamic)));
+            CloudProxiedPlugin.getInstance().getProxyChannel().writeAndFlush(new Packet(PacketType.ProxyServerRequestPacket.name(), new ProxyServerRequestPacket(this.servergroup, this.template, this.wrapper, this.minMemory, this.maxMemory, this.isProxy, this.isDynamic)));
         } else {
-            CloudBukkitPlugin.getInstance().getChannel().writeAndFlush(new Packet(PacketType.GameServerRequestPacket.name(), new GameServerRequestPacket(this.servergroup, this.template, this.wrapper, this.minMemory, this.maxMemory, false, this.isFallBack, this.isDynamic)));
+            CloudBukkitPlugin.getInstance().getServerChannel().writeAndFlush(new Packet(PacketType.GameServerRequestPacket.name(), new GameServerRequestPacket(this.servergroup, this.template, this.wrapper, this.minMemory, this.maxMemory, false, this.isFallBack, this.isDynamic)));
         }
-    }
-
-    @Override
-    public List<String> getOnlineProxies() {
-        return null;
-    }
-
-    @Override
-    public List<String> getOnlineServers() {
-        return null;
     }
 
     @Override
     public Jedis getJedis() {
         return this.jedis;
+    }
+
+    @Override
+    public PlayerManager getPlayerManager() {
+        return this.abstractPlayerManager;
+    }
+
+    @Override
+    public ProxyServerManager getProxyServerManager() {
+        return this.abstractProxyServerManager;
+    }
+
+    @Override
+    public GameServerManager getGameServerManager() {
+        return this.abstractGameServerManager;
+    }
+
+    public Channel getGameServerChannel() {
+        return gameServerChannel;
+    }
+
+    public Channel getProxyServerChannel() {
+        return proxyServerChannel;
+    }
+
+    public void setGameServerChannel(Channel gameServerChannel) {
+        this.gameServerChannel = gameServerChannel;
+    }
+
+    public void setProxyServerChannel(Channel proxyServerChannel) {
+        this.proxyServerChannel = proxyServerChannel;
     }
 }

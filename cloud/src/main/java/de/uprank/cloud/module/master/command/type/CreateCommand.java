@@ -96,8 +96,8 @@ public class CreateCommand implements Command {
                     throw new RuntimeException(e);
                 }
 
-                this.masterModule.getChannel().writeAndFlush(new Packet(PacketType.GroupCreatePacket.name(), new GroupCreatePacket(group, wrapper, false, fallback, version)));
-                this.masterModule.getChannel().writeAndFlush(new Packet(PacketType.GROUP_LOADED_PACKET.name(), new GroupLoadedPacket(group, wrapper, jsonObject.get("version").getAsString(), jsonObject.get("isFallBack").getAsBoolean(), jsonObject.get("version").equals(VersionUtil.WATERFALL.name()) ? true : false, Arrays.asList(insert.get("name").getAsString()))));
+                this.masterModule.getWrapperChannel().writeAndFlush(new Packet(PacketType.GroupCreatePacket.name(), new GroupCreatePacket(group, wrapper, false, fallback, version)));
+                this.masterModule.getWrapperChannel().writeAndFlush(new Packet(PacketType.GROUP_LOADED_PACKET.name(), new GroupLoadedPacket(group, wrapper, jsonObject.get("version").getAsString(), jsonObject.get("isFallBack").getAsBoolean(), jsonObject.get("version").equals(VersionUtil.WATERFALL.name()) ? true : false, Arrays.asList(insert.get("name").getAsString()))));
                 this.masterModule.info("&bSuccessfully created new Group &e" + group + " &bon Wrapper &e" + wrapper + " &7:)");
 
             } else if (args[0].equalsIgnoreCase("servergroup")) {
@@ -154,8 +154,8 @@ public class CreateCommand implements Command {
                     throw new RuntimeException(e);
                 }
 
-                this.masterModule.getChannel().writeAndFlush(new Packet(PacketType.GroupCreatePacket.name(), new GroupCreatePacket(group, wrapper, false, fallback, version)));
-                this.masterModule.getChannel().writeAndFlush(new Packet(PacketType.GROUP_LOADED_PACKET.name(), new GroupLoadedPacket(group, wrapper, jsonObject.get("version").getAsString(), jsonObject.get("isFallBack").getAsBoolean(), jsonObject.get("version").equals(VersionUtil.WATERFALL.name()) ? true : false, Arrays.asList(insert.get("name").getAsString()))));
+                this.masterModule.getWrapperChannel().writeAndFlush(new Packet(PacketType.GroupCreatePacket.name(), new GroupCreatePacket(group, wrapper, false, fallback, version)));
+                this.masterModule.getWrapperChannel().writeAndFlush(new Packet(PacketType.GROUP_LOADED_PACKET.name(), new GroupLoadedPacket(group, wrapper, jsonObject.get("version").getAsString(), jsonObject.get("isFallBack").getAsBoolean(), jsonObject.get("version").equals(VersionUtil.WATERFALL.name()) ? true : false, Arrays.asList(insert.get("name").getAsString()))));
                 this.masterModule.info("&bSuccessfully created new Group &e" + group + " &bon Wrapper &e" + wrapper + " &7:)");
 
             }
@@ -212,7 +212,7 @@ public class CreateCommand implements Command {
                     return;
                 }
 
-                this.masterModule.getChannel().writeAndFlush(new Packet(PacketType.TemplateCreatePacket.name(), new TemplateCreatePacket(name, group, minMemory, maxMemory)));
+                this.masterModule.getWrapperChannel().writeAndFlush(new Packet(PacketType.TemplateCreatePacket.name(), new TemplateCreatePacket(name, group, minMemory, maxMemory)));
 
                 this.masterModule.info("&bSuccessfully created new Template for Group &e" + group + " &bon Wrapper &e" + wrapper + " &7:)");
 

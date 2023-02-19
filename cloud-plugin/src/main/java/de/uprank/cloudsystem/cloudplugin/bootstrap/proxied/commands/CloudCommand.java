@@ -1,5 +1,8 @@
 package de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.commands;
 
+import de.uprank.cloud.packets.Packet;
+import de.uprank.cloud.packets.PacketType;
+import de.uprank.cloud.packets.type.proxy.ProxyToggleMaintenancePacket;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.CloudProxiedPlugin;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -29,6 +32,7 @@ public class CloudCommand extends Command {
             proxiedPlayer.sendMessage(new TextComponent(this.plugin.getProxyConfig().getPrefix() + "§7Here you can see all available cloud commands:"));
             proxiedPlayer.sendMessage(new TextComponent(this.plugin.getProxyConfig().getPrefix() + " §8» §bcloud list servers/proxies"));
             proxiedPlayer.sendMessage(new TextComponent(this.plugin.getProxyConfig().getPrefix() + " §8» §bcloud online"));
+            proxiedPlayer.sendMessage(new TextComponent(this.plugin.getProxyConfig().getPrefix() + " §8» §bcloud toggle on/off"));
 
         }
 
@@ -51,10 +55,24 @@ public class CloudCommand extends Command {
                         return;
                     }
 
-                    this.plugin.getProxies().forEach((proxies) -> proxiedPlayer.sendMessage(new TextComponent(this.plugin.getProxyConfig().getPrefix() + "§b" + proxies)));
+                    this.plugin.getProxies().forEach((proxies) -> {
+                        proxiedPlayer.sendMessage(new TextComponent(this.plugin.getProxyConfig().getPrefix() + "§b" + proxies));
+                    });
 
                 }
 
+            } else if (args[0].equals("toggle")) {
+                if (args[1].equals("on")) {
+
+                    this.plugin.getProxyChannel().writeAndFlush(new Packet(PacketType.ProxyToggleMaintenancePacket.name(), new ProxyToggleMaintenancePacket(false)));
+                    proxiedPlayer.sendMessage(new TextComponent(this.plugin.getProxyConfig().getPrefix() + "§7You have deactivated the maintenance mode!"));
+
+                } else if (args[1].equals("off")) {
+
+                    this.plugin.getProxyChannel().writeAndFlush(new Packet(PacketType.ProxyToggleMaintenancePacket.name(), new ProxyToggleMaintenancePacket(true)));
+                    proxiedPlayer.sendMessage(new TextComponent(this.plugin.getProxyConfig().getPrefix() + "§7You have activated the maintenance mode!"));
+
+                }
             }
 
         } else if (args.length == 1) {
@@ -63,7 +81,7 @@ public class CloudCommand extends Command {
                 this.plugin.getCloudCore().getOnlinePlayers().forEach((uuid, name) -> names.add(name));
                 String onlinePlayers = String.join(", ", names);
 
-
+                proxiedPlayer.sendMessage(new TextComponent(this.plugin.getProxyConfig().getPrefix() + "§7Es sind gerade §b" + names.size() + " §7Spieler auf dem Netzwerk!"));
 
             }
         }

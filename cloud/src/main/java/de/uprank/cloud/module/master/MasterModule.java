@@ -1,11 +1,18 @@
 package de.uprank.cloud.module.master;
 
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import de.uprank.cloud.module.Module;
 import de.uprank.cloud.module.master.command.type.*;
-import de.uprank.cloud.module.master.netty.NettyServer;
+import de.uprank.cloud.module.master.database.signs.CloudSignManager;
 import de.uprank.cloud.module.master.command.CommandManager;
+import de.uprank.cloud.module.master.netty.player.PlayerHandlerServer;
+import de.uprank.cloud.module.master.netty.proxy.ProxyHandlerServer;
+import de.uprank.cloud.module.master.netty.server.ServerHandlerServer;
+import de.uprank.cloud.module.master.netty.wrapper.WrapperHandlerServer;
 import de.uprank.cloud.module.master.proxies.ProxyManager;
 import de.uprank.cloud.module.master.servers.ServerManager;
+import de.uprank.cloud.module.master.servers.sign.SignManager;
 import de.uprank.cloud.module.master.wrapper.WrapperManager;
 import de.uprank.cloud.util.AnsiUtil;
 import io.netty.channel.Channel;
@@ -37,6 +44,7 @@ public class MasterModule extends Module {
     private static MasterModule instance;
 
     private final Map<String, List<String>> servergroups = new HashMap<>();
+    private final List<String> groups = new ArrayList<>();
 
     private final SimpleFormatter simpleFormatter;
     private final SimpleDateFormat simpleDateFormat;
@@ -51,12 +59,29 @@ public class MasterModule extends Module {
     private final ProxyManager proxyManager;
     private final ServerManager serverManager;
 
-    private Channel channel;
+    private final SignManager signManager;
 
-    private NettyServer nettyServer;
+    private final Map<UUID, String> userOnProxy;
+    private final Map<UUID, String> userOnServer;
+
+    private Channel playerChannel;
+    private Channel proxyChannel;
+    private Channel serverChannel;
+    private Channel wrapperChannel;
+
+    private PlayerHandlerServer playerHandlerServer;
+    private ProxyHandlerServer proxyHandlerServer;
+    private ServerHandlerServer serverHandlerServer;
+    private WrapperHandlerServer wrapperHandlerServer;
+
+    private MongoClient mongoClient;
+
+    private CloudSignManager cloudSignManager;
 
     public MasterModule() throws IOException {
         super("master");
+
+        instance = this;
 
         System.setProperty("java.net.preferIPv4Stack", "true");
         System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tF %1$tT] [%4$-7s] %5$s %n");
@@ -77,6 +102,9 @@ public class MasterModule extends Module {
         lineReaderBuilder.parser(new DefaultParser());
         this.lineReader = lineReaderBuilder.build();
 
+        this.mongoClient = new MongoClient(new MongoClientURI("mongodb://root:mVEXrxgsqyKFhsdfiEuApmmkht3MjPuz@45.142.115.211:27017/admin"));
+        this.cloudSignManager = new CloudSignManager(this);
+
         File file = new File("history");
         file.mkdirs();
         String var10002 = file.getCanonicalPath();
@@ -89,6 +117,11 @@ public class MasterModule extends Module {
         this.wrapperManager = new WrapperManager(this);
         this.proxyManager = new ProxyManager(this);
         this.serverManager = new ServerManager(this);
+
+        this.signManager = new SignManager(this);
+
+        this.userOnProxy = new HashMap<>();
+        this.userOnServer = new HashMap<>();
     }
 
 
@@ -138,10 +171,21 @@ public class MasterModule extends Module {
             }
         }).start();
 
-        nettyServer = new NettyServer(this);
-        new Thread(this.nettyServer).start();
+        this.playerHandlerServer = new PlayerHandlerServer(this, 2300);
+        this.proxyHandlerServer = new ProxyHandlerServer(this, 2301);
+        this.serverHandlerServer = new ServerHandlerServer(this, 2302);
+        this.wrapperHandlerServer = new WrapperHandlerServer(this, 2303);
+
+        new Thread(playerHandlerServer).start();
+        new Thread(proxyHandlerServer).start();
+        new Thread(serverHandlerServer).start();
+        new Thread(wrapperHandlerServer).start();
+
+        this.signManager.loadSigns();
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::onDisable));
+
+        this.servergroups.forEach((s, strings) -> this.groups.add(s));
 
     }
 
@@ -246,12 +290,36 @@ public class MasterModule extends Module {
         return this.simpleDateFormat;
     }
 
-    public Channel getChannel() {
-        return channel;
+    public Channel getPlayerChannel() {
+        return playerChannel;
     }
 
-    public void setChannel(Channel channel) {
-        this.channel = channel;
+    public void setPlayerChannel(Channel playerChannel) {
+        this.playerChannel = playerChannel;
+    }
+
+    public Channel getProxyChannel() {
+        return proxyChannel;
+    }
+
+    public void setProxyChannel(Channel proxyChannel) {
+        this.proxyChannel = proxyChannel;
+    }
+
+    public Channel getServerChannel() {
+        return serverChannel;
+    }
+
+    public void setServerChannel(Channel serverChannel) {
+        this.serverChannel = serverChannel;
+    }
+
+    public Channel getWrapperChannel() {
+        return wrapperChannel;
+    }
+
+    public void setWrapperChannel(Channel wrapperChannel) {
+        this.wrapperChannel = wrapperChannel;
     }
 
     public CommandManager getCommandManager() {

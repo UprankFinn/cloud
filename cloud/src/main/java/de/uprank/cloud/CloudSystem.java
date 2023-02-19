@@ -15,10 +15,16 @@ import java.util.logging.Logger;
 
 public class CloudSystem {
 
+    public static CloudSystem instance;
+
     private static MongoClient mongoClient;
 
     private static MasterModule masterModule;
     private static WrapperModule wrapperModule;
+
+    public CloudSystem() {
+        instance = this;
+    }
 
     @SneakyThrows
     public static void main(String[] args) {
@@ -64,6 +70,10 @@ public class CloudSystem {
             wrapperModule.onEnable();
         }
 
+    }
+
+    public static CloudSystem getInstance() {
+        return instance;
     }
 
     public static MongoClient getMongoClient() {

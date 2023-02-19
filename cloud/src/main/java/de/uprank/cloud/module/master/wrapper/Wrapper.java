@@ -27,7 +27,9 @@ public class Wrapper {
     }
 
     public void sendPacket(Packet packet) {
-        new Thread(() -> this.channel.writeAndFlush(packet)).start();
+        new Thread(() -> {
+            this.channel.writeAndFlush(packet);
+        }).start();
     }
 
     public void setChannel(Channel channel) {
