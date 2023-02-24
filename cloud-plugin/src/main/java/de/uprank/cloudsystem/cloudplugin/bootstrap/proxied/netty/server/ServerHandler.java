@@ -12,6 +12,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
 
+import java.util.ArrayList;
+
 public class ServerHandler extends SimpleChannelInboundHandler<Object> {
 
     private final CloudProxiedPlugin plugin;
@@ -35,7 +37,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Object> {
             if (packet.getKey().equals(PacketType.GameServerStartPacket.name())) {
                 GameServerStartPacket gameServerStartPacket = (GameServerStartPacket) packet.getObject();
 
-                this.plugin.getCloudCore().getGameServerManager().getGameServer().add(new AbstractGameServer(gameServerStartPacket.getName(), gameServerStartPacket.getReplayId(), 0, 0, null, null));
+                this.plugin.getCloudCore().getGameServerManager().getGameServer().add(new AbstractGameServer(gameServerStartPacket.getName(), gameServerStartPacket.getReplayId(), "null", gameServerStartPacket.getServerUtil()));
                 this.plugin.getServers().add(gameServerStartPacket.getName());
 
                 if (gameServerStartPacket.isFallBack()) {

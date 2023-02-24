@@ -4,9 +4,12 @@ import de.uprank.cloud.packets.Packet;
 import de.uprank.cloud.packets.PacketType;
 import de.uprank.cloud.packets.type.player.PlayerLogOutPacket;
 import de.uprank.cloud.packets.type.player.PlayerLoginPacket;
+import de.uprank.cloudsystem.cloudapi.events.bukkit.player.BukkitPlayerLoginEvent;
+import de.uprank.cloudsystem.cloudapi.events.bukkit.player.BukkitPlayerLogoutEvent;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.CloudBukkitPlugin;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.bukkit.Bukkit;
 
 public class PlayerHandler extends SimpleChannelInboundHandler<Object> {
 
@@ -31,9 +34,14 @@ public class PlayerHandler extends SimpleChannelInboundHandler<Object> {
             if (packet.getKey().equals(PacketType.PlayerLoginPacket.name())) {
                 PlayerLoginPacket loginPacket = (PlayerLoginPacket) packet.getObject();
                 this.plugin.getCloudCore().getOnlinePlayers().put(loginPacket.getUniqueId(), loginPacket.getName());
+
+                Bukkit.getServer().getPluginManager().callEvent(new BukkitPlayerLoginEvent(loginPacket.getUniqueId(), loginPacket.getName()));
+
             } else if (packet.getKey().equals(PacketType.PlayerLogOutPacket.name())) {
                 PlayerLogOutPacket playerLogOutPacket = (PlayerLogOutPacket) packet.getObject();
                 this.plugin.getCloudCore().getOnlinePlayers().remove(playerLogOutPacket.getUniqueId());
+
+                Bukkit.getServer().getPluginManager().callEvent(new BukkitPlayerLogoutEvent(playerLogOutPacket.getUniqueId(), playerLogOutPacket.getName()));
 
             }
 

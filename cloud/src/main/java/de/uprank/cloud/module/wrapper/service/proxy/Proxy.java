@@ -197,9 +197,9 @@ public class Proxy {
 
         try {
             List<String> lines = new ArrayList<>();
-            String lineToEdit = "  host: 0.0.0.0:25565";
-            String newLine = "  host: 0.0.0.0:" + port;
-            BufferedReader bufferedReader = new BufferedReader(new FileReader("temporary/proxies/" + this.group.toLowerCase(Locale.ROOT) + "/" + this.name.toLowerCase(Locale.ROOT) + "/config.yml"));
+            String lineToEdit = "    host: 0.0.0.0:25565";
+            String newLine = "    host: 0.0.0.0:" + port;
+            BufferedReader bufferedReader = new BufferedReader(new FileReader("temporary/proxies/" + this.group + "/" + this.name + "/config.yml"));
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 if (line.equals(lineToEdit)) {
@@ -209,7 +209,7 @@ public class Proxy {
                 }
             }
             bufferedReader.close();
-            FileWriter fileWriter = new FileWriter("temporary/proxies/" + this.group.toLowerCase(Locale.ROOT) + "/" + this.name.toLowerCase(Locale.ROOT) + "/config.yml");
+            FileWriter fileWriter = new FileWriter("temporary/proxies/" + this.group + "/" + this.name + "/config.yml");
             for (String newline : lines) {
                 fileWriter.write(newline);
                 fileWriter.write("\n");

@@ -1,6 +1,7 @@
 package de.uprank.cloudsystem.cloudapi.server;
 
 import java.util.List;
+import java.util.Map;
 
 public interface GameServerManager {
 

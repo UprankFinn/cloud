@@ -120,7 +120,7 @@ public class CloudCore extends CloudAPI {
     }
 
     @Override
-    public String getCurrentServiceName() {
+    public String getName() {
         return this.name;
     }
 
@@ -142,9 +142,9 @@ public class CloudCore extends CloudAPI {
     @Override
     public void startNewService() {
         if (isProxy) {
-            CloudProxiedPlugin.getInstance().getProxyChannel().writeAndFlush(new Packet(PacketType.ProxyServerRequestPacket.name(), new ProxyServerRequestPacket(this.servergroup, this.template, this.wrapper, this.minMemory, this.maxMemory, this.isProxy, this.isDynamic)));
+            this.proxyServerChannel.writeAndFlush(new Packet(PacketType.ProxyServerRequestPacket.name(), new ProxyServerRequestPacket(this.servergroup, this.template, this.wrapper, this.minMemory, this.maxMemory, true, this.isDynamic)));
         } else {
-            CloudBukkitPlugin.getInstance().getServerChannel().writeAndFlush(new Packet(PacketType.GameServerRequestPacket.name(), new GameServerRequestPacket(this.servergroup, this.template, this.wrapper, this.minMemory, this.maxMemory, false, this.isFallBack, this.isDynamic)));
+            this.gameServerChannel.writeAndFlush(new Packet(PacketType.GameServerRequestPacket.name(), new GameServerRequestPacket(this.servergroup, this.template, this.wrapper, this.minMemory, this.maxMemory, false, this.isFallBack, this.isDynamic)));
         }
     }
 
@@ -174,6 +174,18 @@ public class CloudCore extends CloudAPI {
 
     public Channel getProxyServerChannel() {
         return proxyServerChannel;
+    }
+
+    public AbstractPlayerManager getAbstractPlayerManager() {
+        return abstractPlayerManager;
+    }
+
+    public AbstractGameServerManager getAbstractGameServerManager() {
+        return abstractGameServerManager;
+    }
+
+    public AbstractProxyServerManager getAbstractProxyServerManager() {
+        return abstractProxyServerManager;
     }
 
     public void setGameServerChannel(Channel gameServerChannel) {

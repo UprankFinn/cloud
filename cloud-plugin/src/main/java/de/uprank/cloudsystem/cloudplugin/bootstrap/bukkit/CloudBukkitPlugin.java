@@ -9,6 +9,7 @@ import de.uprank.cloud.packets.type.proxy.server.ProxyAddGameServerPacket;
 import de.uprank.cloud.packets.type.proxy.server.ProxyRemoveGameServerPacket;
 import de.uprank.cloud.packets.type.server.GameServerRequestPacket;
 import de.uprank.cloud.packets.type.server.GameServerStopPacket;
+import de.uprank.cloud.packets.type.server.GameServerSyncPacket;
 import de.uprank.cloud.packets.type.server.GameServerUpdatePacket;
 import de.uprank.cloud.packets.util.StopReason;
 import de.uprank.cloudsystem.cloudplugin.CloudCore;
@@ -16,12 +17,15 @@ import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.commands.CloudServerCo
 import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.database.signs.CloudSignManager;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.listener.PlayerJoinListener;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.listener.PlayerQuitListener;
+import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.listener.ServerListPingListener;
+import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.netty.friend.FriendHandlerClient;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.netty.player.PlayerHandlerClient;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.netty.proxy.ProxyHandlerClient;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.netty.server.ServerHandlerClient;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.bukkit.netty.wrapper.WrapperHandlerClient;
 import io.netty.channel.Channel;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -30,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Getter
+@Setter
 public final class CloudBukkitPlugin extends JavaPlugin {
 
     @Getter
@@ -43,11 +48,13 @@ public final class CloudBukkitPlugin extends JavaPlugin {
 
     private Map<Location, String> signs;
 
+    private Channel friendChannel;
     private Channel playerChannel;
     private Channel proxyChannel;
     private Channel serverChannel;
     private Channel wrapperChannel;
 
+    private FriendHandlerClient friendHandlerClient;
     private PlayerHandlerClient playerHandlerClient;
     private ProxyHandlerClient proxyHandlerClient;
     private ServerHandlerClient serverHandlerClient;
@@ -62,11 +69,13 @@ public final class CloudBukkitPlugin extends JavaPlugin {
         this.cloudCore = new CloudCore("service.json");
 
         if (this.getCloudCore().getName() != null && this.getCloudCore().getHostName() != null && this.getCloudCore().getPort() != null) {
+            this.friendHandlerClient = new FriendHandlerClient(this, "127.0.0.1", 2299);
             this.playerHandlerClient = new PlayerHandlerClient(this, "127.0.0.1", 2300);
             this.proxyHandlerClient = new ProxyHandlerClient(this, "127.0.0.1", 2301);
             this.serverHandlerClient = new ServerHandlerClient(this, "127.0.0.1", 2302);
             this.wrapperHandlerClient = new WrapperHandlerClient(this, "127.0.0.1", 2303);
 
+            new Thread(this.friendHandlerClient).start();
             new Thread(this.playerHandlerClient).start();
             new Thread(this.proxyHandlerClient).start();
             new Thread(this.serverHandlerClient).start();
@@ -83,26 +92,27 @@ public final class CloudBukkitPlugin extends JavaPlugin {
 
         new PlayerJoinListener(this);
         new PlayerQuitListener(this);
+        new ServerListPingListener(this);
 
         Map<String, Object> data = new HashMap<>();
         data.put("maxPlayers", Bukkit.getMaxPlayers());
-        data.put("motd", Bukkit.getMotd());
+        data.put("motd", "loading");
         data.put("serverState", ServerUtil.LOBBY.name());
         data.put("group", this.cloudCore.getCurrentServerGroup());
         data.put("template", this.cloudCore.getTemplate());
         data.put("wrapper", this.cloudCore.getWrapper());
         this.serverChannel.writeAndFlush(new Packet(PacketType.GameServerUpdatePacket.name(), new GameServerUpdatePacket(this.cloudCore.getName(), data)));
-        this.proxyChannel.writeAndFlush(new Packet(PacketType.ProxyAddGameServerPacket.name(), new ProxyAddGameServerPacket(this.cloudCore.getCurrentServiceName(), Bukkit.getServer().getIp(), Bukkit.getServer().getPort())));
+        this.proxyChannel.writeAndFlush(new Packet(PacketType.ProxyAddGameServerPacket.name(), new ProxyAddGameServerPacket(this.cloudCore.getName(), Bukkit.getServer().getIp(), Bukkit.getServer().getPort())));
 
     }
 
     @Override
     public void onDisable() {
+        this.serverChannel.writeAndFlush(new Packet(PacketType.GameServerUnsyncPacket.name(), new GameServerSyncPacket(this.cloudCore.getName())));
+
         this.serverChannel.writeAndFlush(new Packet(PacketType.GameServerRequestPacket.name(), new GameServerRequestPacket(this.cloudCore.getServergroup(),
                 this.cloudCore.getTemplate(), this.cloudCore.getWrapper(), this.cloudCore.getMinMemory(), this.cloudCore.getMaxMemory(),
                 false, this.cloudCore.getIsFallBack(), this.cloudCore.getIsDynamic())));
-
-        this.proxyChannel.writeAndFlush(new Packet(PacketType.ProxyRemoveGameServerPacket.name(), new ProxyRemoveGameServerPacket(this.cloudCore.getName())));
 
         this.serverChannel.writeAndFlush(new Packet(PacketType.GameServerStopPacket.name(), new GameServerStopPacket(
                 this.cloudCore.getName(),StopReason.Normal_STOP,this.cloudCore.getServergroup(),this.cloudCore.getTemplate(),this.cloudCore.getWrapper(),
@@ -110,40 +120,10 @@ public final class CloudBukkitPlugin extends JavaPlugin {
                 false,
                 this.cloudCore.getIsFallBack(),this.cloudCore.getIsDynamic())));
 
+        this.proxyChannel.writeAndFlush(new Packet(PacketType.ProxyRemoveGameServerPacket.name(), new ProxyRemoveGameServerPacket(this.cloudCore.getName())));
+
         if (this.wrapperChannel.isOpen() && this.wrapperChannel.isActive() && this.wrapperChannel.isRegistered()) {
             this.wrapperChannel.close();
         }
-    }
-
-    public Channel getPlayerChannel() {
-        return playerChannel;
-    }
-
-    public void setPlayerChannel(Channel playerChannel) {
-        this.playerChannel = playerChannel;
-    }
-
-    public Channel getProxyChannel() {
-        return proxyChannel;
-    }
-
-    public void setProxyChannel(Channel proxyChannel) {
-        this.proxyChannel = proxyChannel;
-    }
-
-    public Channel getServerChannel() {
-        return serverChannel;
-    }
-
-    public void setServerChannel(Channel serverChannel) {
-        this.serverChannel = serverChannel;
-    }
-
-    public Channel getWrapperChannel() {
-        return wrapperChannel;
-    }
-
-    public void setWrapperChannel(Channel wrapperChannel) {
-        this.wrapperChannel = wrapperChannel;
     }
 }

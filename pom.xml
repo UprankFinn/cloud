@@ -13,6 +13,7 @@
         <module>cloud-api</module>
         <module>cloud-plugin</module>
         <module>packets</module>
+        <module>bedwars</module>
     </modules>
 
     <properties>

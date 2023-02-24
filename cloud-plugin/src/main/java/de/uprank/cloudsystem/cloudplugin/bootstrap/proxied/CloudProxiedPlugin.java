@@ -8,12 +8,14 @@ import de.uprank.cloudsystem.cloudplugin.CloudCore;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.commands.CloudCommand;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.config.ProxyConfig;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.listener.*;
+import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.netty.friend.FriendHandlerClient;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.netty.player.PlayerHandlerClient;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.netty.proxy.ProxyHandlerClient;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.netty.server.ServerHandlerClient;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.netty.wrapper.WrapperHandlerClient;
 import io.netty.channel.Channel;
 import lombok.Getter;
+import lombok.Setter;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
+@Setter
 public final class CloudProxiedPlugin extends Plugin {
 
     @Getter
@@ -38,11 +41,13 @@ public final class CloudProxiedPlugin extends Plugin {
     private final Map<String, ServerInfo> premiums;
     private final Map<String, ServerInfo> silent;
 
+    private Channel friendChannel;
     private Channel playerChannel;
     private Channel proxyChannel;
     private Channel serverChannel;
     private Channel wrapperChannel;
 
+    private FriendHandlerClient friendHandlerClient;
     private PlayerHandlerClient playerHandlerClient;
     private ProxyHandlerClient proxyHandlerClient;
     private ServerHandlerClient serverHandlerClient;
@@ -65,6 +70,7 @@ public final class CloudProxiedPlugin extends Plugin {
         this.proxyConfig = new ProxyConfig(this);
         this.proxyConfig.readConfig();
 
+        this.friendHandlerClient = new FriendHandlerClient(this, "127.0.0.1", 2299);
         this.playerHandlerClient = new PlayerHandlerClient(this, "127.0.0.1", 2300);
         this.proxyHandlerClient = new ProxyHandlerClient(this, "127.0.0.1", 2301);
         this.serverHandlerClient = new ServerHandlerClient(this, "127.0.0.1", 2302);

@@ -19,7 +19,7 @@ public abstract class CloudAPI {
 
     public abstract Map<UUID, String> getOnlinePlayers();
 
-    public abstract String getCurrentServiceName();
+    public abstract String getName();
     public abstract String getGameId();
     public abstract String getCurrentTemplate();
     public abstract String getCurrentServerGroup();

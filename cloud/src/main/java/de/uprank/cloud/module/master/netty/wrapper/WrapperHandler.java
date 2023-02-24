@@ -138,7 +138,9 @@ public class WrapperHandler extends SimpleChannelInboundHandler<Object> {
 
                     channelHandlerContext.channel().writeAndFlush(new Packet(PacketType.GROUP_LOADED_PACKET.name(), new GroupLoadedPacket(servergroups, jsonObjects.get("wrapper").getAsString(), jsonObjects.get("version").getAsString(), jsonObjects.get("isFallBack").getAsBoolean(), jsonObjects.get("version").getAsString().equals(VersionUtil.WATERFALL.name()) ? true : false, templates)));
                     templates.forEach((templatess) -> {
+
                         this.masterModule.getServerChannel().writeAndFlush(new Packet(PacketType.GameServerRequestPacket.name(), new GameServerRequestPacket(servergroups, templatess, jsonObjects.get("wrapper").getAsString(), jsonObject.get("minMemory").getAsInt(), jsonObject.get("maxMemory").getAsInt(), jsonObjects.get("version").getAsString().equals(VersionUtil.WATERFALL.name()) ? true : false, jsonObjects.get("isFallBack").getAsBoolean(), true)));
+
                     });
                 }
 

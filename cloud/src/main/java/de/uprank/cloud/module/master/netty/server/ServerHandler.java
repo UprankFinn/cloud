@@ -4,10 +4,8 @@ import de.uprank.cloud.module.master.MasterModule;
 import de.uprank.cloud.module.master.servers.Server;
 import de.uprank.cloud.packets.Packet;
 import de.uprank.cloud.packets.PacketType;
-import de.uprank.cloud.packets.type.server.GameServerRequestPacket;
-import de.uprank.cloud.packets.type.server.GameServerStartPacket;
-import de.uprank.cloud.packets.type.server.GameServerStopPacket;
-import de.uprank.cloud.packets.type.server.GameServerUpdatePacket;
+import de.uprank.cloud.packets.type.CloudStopPacket;
+import de.uprank.cloud.packets.type.server.*;
 import de.uprank.cloud.packets.type.sync.ProxySyncPacket;
 import de.uprank.cloud.packets.util.StopReason;
 import io.netty.channel.ChannelHandlerContext;
@@ -40,12 +38,21 @@ public class ServerHandler extends SimpleChannelInboundHandler<Object> {
                     this.masterModule.getServerManager().getServers().remove(gameServerStopPacket.getName());
                 }
 
+                this.masterModule.getServerManager().getServers().forEach((s, server) -> {
+                    this.masterModule.info("&6UnSYNC Server " + server.getName() + " with all other servers");
+                    this.masterModule.getServerChannel().writeAndFlush(new Packet(PacketType.GameServerUnsyncPacket.name(), new GameServerUnsyncPacket(gameServerStopPacket.getName())));
+                });
+            } else if (packet.getKey().equals(PacketType.GameServerUnsyncPacket.name())) {
+                GameServerUnsyncPacket gameServerUnsyncPacket = (GameServerUnsyncPacket) packet.getObject();
+                this.masterModule.getServerManager().getServers().forEach((s, server) -> {
+                    this.masterModule.info("&6UnSYNC Server " + server.getName() + " with all other servers");
+                    this.masterModule.getServerChannel().writeAndFlush(packet);
+                });
             } else if (packet.getKey().equals(PacketType.GameServerStartPacket.name())) {
                 GameServerStartPacket gameServerStartPacket = (GameServerStartPacket) packet.getObject();
 
                 if (!(this.masterModule.getServerManager().getServers().containsKey(gameServerStartPacket.getName()))) {
                     this.masterModule.getServerManager().getServers().put(gameServerStartPacket.getName(), new Server(gameServerStartPacket.getName(), gameServerStartPacket.getHostName(), gameServerStartPacket.getPort(), gameServerStartPacket.isFallBack(), gameServerStartPacket.getMinMemory(), gameServerStartPacket.getMaxMemory(), gameServerStartPacket.isDynamic(), channelHandlerContext.channel()));
-                    this.masterModule.info("[ONLINE] SERVER IS NOW STARTING and added to ServersArray " + gameServerStartPacket.getName());
                 }
 
                 this.masterModule.getCloudSignManager().getCloudSigns().forEach((uuid, cloudSign) -> {
@@ -89,9 +96,20 @@ public class ServerHandler extends SimpleChannelInboundHandler<Object> {
                         this.masterModule.getServerManager().getServer(gameServerUpdatePacket.getServerName()).setWrapper(wrapper);
                     } else if (gameServerUpdatePacket.getUpdatedData().containsKey("serverState")) {
                         String serverState = (String) gameServerUpdatePacket.getUpdatedData().get("serverState");
-
+                        this.masterModule.getServerManager().getServer(gameServerUpdatePacket.getServerName()).setServerState(serverState);
                     }
+
+                    this.masterModule.getServerManager().getServers().forEach((s, server) -> {
+                        this.masterModule.info("&4SYNC Server " + server.getName() + " with all other servers");
+                        this.masterModule.getServerChannel().writeAndFlush(packet);
+                    });
+
                 }
+
+                this.masterModule.getServerManager().getServers().forEach((s, server) -> {
+                    this.masterModule.info("&6SYNC Server " + server.getName() + " with all other servers");
+                    this.masterModule.getServerChannel().writeAndFlush(new Packet(PacketType.GameServerSyncPacket.name(), new GameServerSyncPacket(server.getName())));
+                });
 
             } else if (packet.getKey().equals(PacketType.GameServerRequestPacket.name())) {
                 GameServerRequestPacket gameServerRequestPacket = (GameServerRequestPacket) packet.getObject();
@@ -106,6 +124,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     public void channelInactive(ChannelHandlerContext channelHandlerContext) throws Exception {
-        this.masterModule.getServerManager().getServers().forEach((s, server) -> channelHandlerContext.writeAndFlush(new Packet(PacketType.GameServerStopPacket.name(), new GameServerStopPacket(server.getName(), StopReason.Cloud_STOP, server.getGroup(), server.getTemplate(), server.getWrapper(), server.getHostName(), server.getPort(), server.getMinMemory(), server.getMaxMemory(), false, server.getFallBack(), server.getDynamic()))));
+        this.masterModule.getServerManager().getServers().forEach((s, server) -> {
+            channelHandlerContext.writeAndFlush(new Packet(PacketType.CloudStopPacket.name(), new CloudStopPacket()));
+        });
     }
 }

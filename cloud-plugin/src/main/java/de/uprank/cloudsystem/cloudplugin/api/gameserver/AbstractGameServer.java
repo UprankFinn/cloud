@@ -8,7 +8,9 @@ import de.uprank.cloudsystem.cloudapi.server.GameServer;
 import de.uprank.cloudsystem.cloudplugin.CloudCore;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class AbstractGameServer extends GameServer {
 
@@ -21,12 +23,9 @@ public class AbstractGameServer extends GameServer {
     private String motd;
     private ServerUtil serverUtil;
 
-    public AbstractGameServer(String name, String replayId, Integer playerAmount, Integer maxPlayerAmount, String motd, ServerUtil serverUtil) {
+    public AbstractGameServer(String name, String replayId, String motd, ServerUtil serverUtil) {
         this.name = name;
         this.replayId = replayId;
-
-        this.playerAmount = playerAmount;
-        this.maxPlayerAmount = maxPlayerAmount;
 
         this.motd = motd;
         this.serverUtil = serverUtil;
@@ -48,13 +47,43 @@ public class AbstractGameServer extends GameServer {
     }
 
     @Override
+    public void setPlayerAmount(Integer playerAmount) {
+        this.playerAmount = playerAmount;
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("onlinePlayers", playerAmount);
+
+        CloudCore.getPlugin().getGameServerChannel().writeAndFlush(new Packet(PacketType.GameServerUpdatePacket.name(), new GameServerUpdatePacket(this.name, data)));
+    }
+
+    @Override
     public Integer getMaxPlayerAmount() {
         return this.maxPlayerAmount;
     }
 
     @Override
+    public void setMaxPlayerAmount(Integer maxPlayerAmount) {
+        this.maxPlayerAmount = maxPlayerAmount;
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("maxPlayers", playerAmount);
+
+        CloudCore.getPlugin().getGameServerChannel().writeAndFlush(new Packet(PacketType.GameServerUpdatePacket.name(), new GameServerUpdatePacket(this.name, data)));
+    }
+
+    @Override
     public String getMotd() {
         return this.motd;
+    }
+
+    @Override
+    public void setMotd(String motd) {
+        this.motd = motd;
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("motd", motd);
+
+        CloudCore.getPlugin().getGameServerChannel().writeAndFlush(new Packet(PacketType.GameServerUpdatePacket.name(), new GameServerUpdatePacket(this.name, data)));
     }
 
     @Override

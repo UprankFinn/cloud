@@ -16,6 +16,8 @@ public enum PacketType {
     TemplateCreatePacket,
     TemplateDeletePacket,
 
+    CloudStopPacket,
+
     //========= PROXY ============
 
     ProxyServerRequestPacket,
@@ -45,6 +47,11 @@ public enum PacketType {
     GameServerAlivePacket,
     GameServerStopPacket,
 
+    GameServerSyncPacket,
+    GameServerUnsyncPacket,
+
+    GameServerUpdatePlayerPacket,
+
     GameServerUpdatePacket,
 
     GameServerSignPacket,
@@ -65,6 +72,16 @@ public enum PacketType {
     PlayerSwitchServerPacket,
 
     GetCloudPlayerPacket,
+
+    //========= Friend ============
+
+    PlayerAddFriendPacket,
+    PlayerAcceptFriendPacket,
+
+    PlayerRemoveFriendPacket,
+    FriendMessagePacket,
+
+    GetFriendPlayerPacket,
 
     ;
 

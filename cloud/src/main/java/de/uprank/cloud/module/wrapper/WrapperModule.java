@@ -125,6 +125,7 @@ public class WrapperModule extends Module {
         this.commandManager.registerCommand("help", new HelpCommand(this));
         this.commandManager.registerCommand("reload", new ReloadCommand(this));
         this.commandManager.registerCommand("server", new ServerCommand(this));
+        this.commandManager.registerCommand("start", new StartCommand(this));
         this.commandManager.registerCommand("stop", new StopCommand(this));
 
         if (!(new File("default/bukkit/plugins/").exists())) new File("default/bukkit/plugins/").mkdirs();

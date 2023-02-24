@@ -34,7 +34,7 @@ public class CloudServerCommand implements CommandExecutor {
 
         } else if (args.length == 1) {
 
-            player.sendMessage("name: " + this.plugin.getCloudCore().getCurrentServiceName());
+            player.sendMessage("name: " + this.plugin.getCloudCore().getName());
             player.sendMessage("gameId: " + this.plugin.getCloudCore().getGameId());
             player.sendMessage("onlinePlayers: §e" + Bukkit.getOnlinePlayers().size() + "§8/§6" + Bukkit.getMaxPlayers());
 

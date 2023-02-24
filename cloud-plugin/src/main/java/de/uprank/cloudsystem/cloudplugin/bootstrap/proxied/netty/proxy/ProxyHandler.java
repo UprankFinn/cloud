@@ -10,7 +10,6 @@ import de.uprank.cloud.packets.type.proxy.server.ProxyRemoveGameServerPacket;
 import de.uprank.cloud.packets.type.proxy.sync.ProxySyncServersPacket;
 import de.uprank.cloud.packets.type.sync.GetProxySyncPacket;
 import de.uprank.cloud.packets.type.sync.ProxySyncPacket;
-import de.uprank.cloudsystem.cloudapi.events.GameServerStartEvent;
 import de.uprank.cloudsystem.cloudplugin.api.proxyserver.AbstractProxyServer;
 import de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.CloudProxiedPlugin;
 import io.netty.channel.ChannelHandlerContext;
@@ -20,7 +19,6 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -139,6 +137,8 @@ public class ProxyHandler extends SimpleChannelInboundHandler<Object> {
                 ServerInfo serverInfo = ProxyServer.getInstance().constructServerInfo(proxySyncPacket.getServerName(), new InetSocketAddress(proxySyncPacket.getAddress(), proxySyncPacket.getPort()), null, false);
                 ProxyServer.getInstance().getServers().put(proxySyncPacket.getServerName(), serverInfo);
 
+            } else if (packet.getKey().equals(PacketType.CloudStopPacket.name())) {
+                this.plugin.getProxy().stop();
             }
 
         }).start();

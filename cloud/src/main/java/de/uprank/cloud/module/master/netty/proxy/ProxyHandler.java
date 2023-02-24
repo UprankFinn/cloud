@@ -4,6 +4,7 @@ import de.uprank.cloud.module.master.MasterModule;
 import de.uprank.cloud.module.master.proxies.Proxy;
 import de.uprank.cloud.packets.Packet;
 import de.uprank.cloud.packets.PacketType;
+import de.uprank.cloud.packets.type.CloudStopPacket;
 import de.uprank.cloud.packets.type.player.PlayerMessagePacket;
 import de.uprank.cloud.packets.type.proxy.*;
 import de.uprank.cloud.packets.type.proxy.server.ProxyAddGameServerPacket;
@@ -117,6 +118,8 @@ public class ProxyHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     public void channelInactive(ChannelHandlerContext channelHandlerContext) throws Exception {
-        this.masterModule.getProxyManager().getProxies().forEach((s, proxy) -> channelHandlerContext.writeAndFlush(new Packet(PacketType.ProxyServerStopPacket.name(), new ProxyServerStopPacket(proxy.getName(), StopReason.Cloud_STOP, proxy.getHostName(), proxy.getPort(), proxy.getGroup(), proxy.getTemplate(), proxy.getWrapper(), proxy.getMinMemory(), proxy.getMaxMemory(), proxy.getDynamic()))));
+        this.masterModule.getProxyManager().getProxies().forEach((s, proxy) -> {
+            channelHandlerContext.writeAndFlush(new Packet(PacketType.CloudStopPacket.name(), new CloudStopPacket()));
+        });
     }
 }
