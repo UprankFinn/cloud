@@ -1,4 +1,0 @@
-name: CloudProxy
-author: Uprank - Finn K.
-version: 1.0-SNAPSHOT
-main: de.uprank.cloudsystem.cloudplugin.bootstrap.proxied.CloudProxiedPlugin
