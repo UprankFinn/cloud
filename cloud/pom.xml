@@ -18,14 +18,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <developers>
-        <developer>
-            <name>Finn Keller</name>
-            <email>Uprank.Official@gmail.com</email>
-            <url>https://github.com/uprankfinn/</url>
-        </developer>
-    </developers>
-
     <dependencies>
         <dependency>
             <groupId>de.uprank</groupId>
